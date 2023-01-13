@@ -1,0 +1,160 @@
+def __init__(self):
+        # Left child
+        self.left = None
+        # Right child
+        self.right = None
+        # Parent node
+        self.parent = None
+        # Characteristic coordinates
+        self.x = None
+        # Syncopation axis
+        self.dimension = None
+        # Have you been visited
+        self.flag = False
+
+
+# Build kd tree
+def construct(d, data, node, layer):
+    """
+    :type d: int
+    dIs the dimension of a vector
+    :type data: list
+    dataIs a list of all vectors
+    :type node: Node
+    nodeIt is the node of the current operation
+    :type layer: int
+    layerIs the number of layers of the current kd tree
+    """
+    node.dimension = layer%d
+    # If there is only one element, the branch ends when the leaf node is reached
+    if len(data) == 1:
+        node.x = data[0]
+        return
+    if len(data) == 0:  # The unrepresented data is treated as an empty leaf node
+        return
+    # 1,The data in data is sorted by layer% N dimension
+    data.sort(key=lambda x: x[layer % d])
+    # 2,Calculate the index of the middle point. If the number is even, take the larger of the 		#two middle places and record it as the characteristic coordinate of the node
+    middle = len(data) // 2
+    node.x = data[middle]
+    # 3，Partition data
+    dataleft = data[:middle]
+    dataright = data[middle + 1:]
+    # 4,Left child node
+
+    left_node = Node()
+    node.left = left_node
+    left_node.parent = node
+    construct(d, dataleft, left_node, layer + 1)
+    # 5，Right child node
+
+    right_node = Node()
+    node.right = right_node
+    right_node.parent = node
+    construct(d, dataright, right_node, layer + 1)
+
+
+def distance(a, b):  # Calculate Euclidean distance
+    """
+    :type a: list
+    :type b: list
+    """
+    dis = 0
+    for i in range(0, len(a)):
+        dis += (a[i] - b[i]) ** 2
+    return dis ** 0.5
+
+
+def change_L(L, x, p, K):  # Judge and determine whether to add this point to the list of 							  #nearest neighbor points
+    """
+    :type L: list
+    L is the list of nearest neighbor points
+    :type x: list
+    X is the vector to determine whether to add the nearest neighbor list
+    :type p: list
+    P is the target vector
+    :type K:int
+    K is the maximum number of elements in the nearest neighbor list
+    """
+    if len(L) < K:
+        L.append(x)
+        return
+    dislist = []
+    for i in range(0, K):
+        dislist.append(distance(p, L[i]))
+    index = dislist.index(max(dislist))
+    if distance(p, x) < dislist[index]:  #If the distance between x and p is less than the 			#farthest point from L to p, replace the farthest point with x
+        L[index] = x
+    return max(dislist)
+
+
+# Search kd tree
+def search(node, p, L, K):
+    """
+    :type List: list
+    :type node: Node
+    :type p: list
+    :type L: list
+    :type K: int
+    :type L0: list
+    :type f: bool
+    """
+    #L is a list with k seats, which is used to save the closest points found
+#1. Search down according to the coordinate value of p and the segmentation axis of each 	point, and reach the bottom node first
+N=node # Use n to record the position of the node, starting from the top to the leaf node
+    while True:
+        # Exit the loop if the leaf node is reached
+        if (n.left == None) & (n.right == None):
+            break
+        if n.x[n.dimension] > p[n.dimension]:
+            n = n.left
+        else:
+            n = n.right
+    n.flag = True  # Mark as accessed
+    if n.x is None:  # If it is an empty leaf node, it is not necessary to record the value
+        pass
+    else:
+        change_L(L, n.x, p, K)  # If the insertion condition is met, insert it; otherwise, do 						#not insert it
+    while True:
+        # If the current node is the root node, the output L algorithm is complete
+        if n.parent is None:
+            if len(L) < K:
+                print('K value exceeds total data')
+            return L
+        # The current node is not a root node, climb up one grid
+        else:
+            n = n.parent
+            while n.flag == True:
+                #If the current node has been accessed, it will continue to climb up to the node that has not been accessed
+#If you encounter a root node that has been visited when climbing up, it means that the other side has searched for the end of the search
+                if (n.parent is None) & (n.flag):
+                    if len(L) < K:
+                        print('K value exceeds total data')
+                    return L
+                n = n.parent
+            # At this time, n has not been accessed. Mark it as accessed
+            n.flag = True
+
+            #(1) If there are less than k points in L, add node features to L;
+#If L is full of k points and the distance between the current node and p is less than 	the maximum distance from L,
+#Then replace the farthest point in LL with node features.
+            change_L(L, n.x, p, K)
+            ''' Calculate the distance between p and the tangent line of the current node. If 	the distance is less than or equal to the farthest distance in LL or less than kk points in LL,
+Then there may be a closer point on the other side of the dividing line or on the dividing line,
+Therefore, on the other branch of the current node, execute from (I)。'''
+            dislist = []
+            for i in range(0, len(L)):
+                dislist.append(distance(p, L[i]))
+            if (abs(p[n.dimension] - n.x[n.dimension]) < max(dislist)) | (len(L) < K):
+                if n.left.flag == False:
+                    return search(n.left, p, L, K)
+                else:
+                    return search(n.right, p, L, K)
+            # If the distance is greater than or equal to the farthest distance p in L and there are k points in L, then there will be no closer point on the other side of the tangent line. Repeat (III)
+
+#Instructions for use
+#Data represents the data set. Here is the list type. The element represents the data point, which is the d-dimension vector. d represents the dimension of the data point in the data. p is the point to find the nearest neighbor of k, K is the number of nearest neighbors, and others are the default values
+data = [[5, 4], [7, 2], [2, 3], [4, 7], [8, 1], [9, 6]]
+node = Node()
+construct(d=2, data=data, node=node, layer=0)
+print(search(node=node, p=[5, 4], L=[], K=6))
