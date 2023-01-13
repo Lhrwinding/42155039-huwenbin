@@ -1,0 +1,91 @@
+
+import xlrd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
+#Read the excel file. 400 are training sets and 200 are test sets
+
+def read_xslx(xslx_path):
+
+    dataSet = []                      # First declare an empty list
+    data = xlrd.open_workbook(xslx_path)   # read file
+    table = data.sheet_by_index(0)         # Get worksheet by index, 0 is worksheet 1
+
+    for i in range(table.nrows):  # Table.nrows represents the total number of rows
+        line = table.row_values(i)         # Read each line of data and save it in line. Line is a list
+        dataSet.append(line)          # Add line to trainingdata, which is a two-dimensional list
+    dataSet = np.array(dataSet)  # Change trainingdata from a two-dimensional list to an array
+
+    return dataSet
+####################################################################################################################
+
+#Normalized processing function
+#####################################################################################
+def standardization(v,mu,sigma):
+    v = (v - mu)/sigma
+    return v
+#####################################################################################
+
+#Normalized data
+####################################################################################################################
+def standardize(data):
+
+    numTotal = data.shape[0]  # Record the total number of test data sets
+    attr1 = data[:, 0].astype(float)              #Standardization process
+    attr2 = data[:, 1].astype(float)
+    attr3 = data[:, 2].astype(float)
+    attr4 = data[:, 3].astype(float)
+    attr5 = data[:, 4].astype(float)
+    attr6 = data[:, 5].astype(float)
+    Data = data
+
+    mu1 = np.mean(attr1)
+    sigma1 = np.std(attr1)
+    for i in range(0,numTotal):
+        Data[:, 0][i] =  standardization(attr1[i],mu1,sigma1)
+
+    mu2 = np.mean(attr2)
+    sigma2 = np.std(attr2)
+    for i in range(0,numTotal):
+        Data[:, 1][i] =  standardization(attr2[i],mu2,sigma2)
+
+    mu3 = np.mean(attr3)
+    sigma3 = np.std(attr3)
+    for i in range(0,numTotal):
+        Data[:, 2][i] =  standardization(attr3[i],mu3,sigma3)
+
+    mu4 = np.mean(attr4)
+    sigma4 = np.std(attr4)
+    for i in range(0,numTotal):
+        Data[:, 3][i] =  standardization(attr4[i],mu4,sigma4)
+
+    mu5 = np.mean(attr5)
+    sigma5 = np.std(attr5)
+    for i in range(0,numTotal):
+        Data[:, 4][i] =  standardization(attr5[i],mu5,sigma5)
+
+    mu6 = np.mean(attr6)
+    sigma6 = np.std(attr6)
+    for i in range(0,numTotal):
+        Data[:, 5][i] =  standardization(attr6[i],mu6,sigma6)
+
+    return Data
+
+#Calculate distance
+def calDistance(testingrow, trainingrow):
+    dist = ((float(testingrow[0]) - float(trainingrow[0])) ** 2 + (float(testingrow[1]) - float(trainingrow[1])) ** 2 \
+            + (float(testingrow[2]) - float(trainingrow[2])) ** 2 + (float(testingrow[3]) - float(trainingrow[3])) ** 2\
+            + (float(testingrow[4]) - float(trainingrow[4])) ** 2 + (float(testingrow[5]) - float(trainingrow[5])) ** 2) ** 0.5
+    return dist
+####################################################################################################################
+
+#K-neighborhood algorithm
+####################################################################################################################
+def KNN(trainingData, testingData, k):
+
+    numTest = testingData.shape[0]     # Record the total number of test data sets
+    numTrain = trainingData.shape[0]   # Record the total number of training data sets
+    labelTest = []                     # Record the label classification results of each test sample
+
+    for i in range(0, numTest):
